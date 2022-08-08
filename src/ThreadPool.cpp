@@ -5,7 +5,7 @@
 
 void ThreadPool::Schedule(Task task)
 {
-    std::unique_lock lock(*myMutex);
+    std::unique_lock lock(myMutex);
     myTaskQueue->push(task);
 }
 
@@ -59,7 +59,6 @@ ThreadPool::~ThreadPool()
 
 ThreadPool::ThreadPool()
 {
-    myMutex = new std::mutex();
     myTaskQueue = new std::queue<Task>();
     myIsActive = new std::atomic<bool>(false);
 }
