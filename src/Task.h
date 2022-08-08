@@ -27,7 +27,7 @@ class Task
 {
 private:
     std::string myName;
-    std::atomic<bool> myIsCompleted;
+    std::atomic<bool> myIsCompleted{false};
     TaskJobFunction* myJob;
     TaskController* myController;
 

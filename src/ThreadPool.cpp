@@ -11,7 +11,7 @@ void ThreadPool::Schedule(Task task)
 
 void ThreadPool::Stop()
 {
-    myIsActive->store(false, std::memory_order_seq_cst);
+    myIsActive.store(false, std::memory_order_seq_cst);
 }
 
 void ThreadPool::WaitForAllTasksCompletion()
@@ -21,17 +21,17 @@ void ThreadPool::WaitForAllTasksCompletion()
 
 void ThreadPool::StartBlocking()
 {
-    myIsActive->store(true, std::memory_order_seq_cst);
+    myIsActive.store(true, std::memory_order_seq_cst);
 
     std::thread([=]() {
         while (true)
         {
-            if (!myIsActive->load(std::memory_order_seq_cst))
+            if (!myIsActive.load(std::memory_order_seq_cst))
             {
                 return;
             }
 
-            std::unique_lock lock(*myMutex);
+            std::unique_lock lock(myMutex);
             std::vector<Task> tasks;
             while (!myTaskQueue->empty())
             {
@@ -66,5 +66,5 @@ ThreadPool::ThreadPool()
 
 bool ThreadPool::IsActive()
 {
-    return myIsActive->load(std::memory_order_seq_cst);
+    return myIsActive.load(std::memory_order_seq_cst);
 }

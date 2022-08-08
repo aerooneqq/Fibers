@@ -11,21 +11,21 @@ volatile int x = 0;
 
 int main()
 {
-//    RegisterContext context{};
-//    FillContext(&context);
-//
-//    int xx = 1;
-//    std::cout << xx << "\n";
-//    ++xx;
-//
-//    std::cout << context.ReturnAddress << " " << context.StackPointer << "\n";
-//    std::cout << "SADASD" << "\n";
-//
-//    if (x == 0)
-//    {
-//        ++x;
-//        SetContext(&context);
-//    }
+    RegisterContext context{};
+    FillContext(&context);
+
+    int xx = 1;
+    std::cout << xx << "\n";
+    ++xx;
+
+    std::cout << context.ReturnAddress << " " << context.StackPointer << "\n";
+    std::cout << "SADASD" << "\n";
+
+    if (x == 0)
+    {
+        ++x;
+        SetContext(&context);
+    }
 
     ThreadPool pool{};
 

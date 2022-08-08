@@ -17,9 +17,12 @@ Task::Task(std::string name, TaskJobFunction* job) : myName(std::move(name))
     myJob = job;
 }
 
-Task::Task(const Task &other)
+Task::Task(const Task& other)
 {
     myJob = other.myJob;
+    myName = other.myName;
+    myController = other.myController;
+    myIsCompleted.store(other.myIsCompleted.load(std::memory_order_seq_cst));
 }
 
 void Task::Execute()

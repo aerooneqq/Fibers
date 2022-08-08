@@ -6,8 +6,9 @@
 class ThreadPool
 {
 private:
-    std::atomic<bool>* myIsActive;
-    std::mutex* myMutex;
+    std::atomic<bool> myIsExecutingTasks{false};
+    std::atomic<bool> myIsActive{false};
+    std::mutex myMutex;
     std::queue<Task>* myTaskQueue;
 
 public:
