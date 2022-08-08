@@ -1,16 +1,14 @@
-
-#include <mutex>
 #include <thread>
 #include "ThreadPool.h"
 
-void ThreadPool::Schedule(Task task)
+void ThreadPool::Schedule(const Task& task)
 {
-    std::unique_lock lock(myMutex);
-    myTaskQueue->push(task);
+    mySingleThread->QueueTask(task);
 }
 
 void ThreadPool::Stop()
 {
+    mySingleThread->Stop();
     myIsActive.store(false, std::memory_order_seq_cst);
 }
 
@@ -19,37 +17,11 @@ void ThreadPool::WaitForAllTasksCompletion()
 
 }
 
-void ThreadPool::StartBlocking()
+void ThreadPool::Start()
 {
+    mySingleThread = new ThreadPoolThread();
+    mySingleThread->Start();
     myIsActive.store(true, std::memory_order_seq_cst);
-
-    std::thread([=]() {
-        while (true)
-        {
-            if (!myIsActive.load(std::memory_order_seq_cst))
-            {
-                return;
-            }
-
-            std::unique_lock lock(myMutex);
-            std::vector<Task> tasks;
-            while (!myTaskQueue->empty())
-            {
-                tasks.push_back(myTaskQueue->front());
-                myTaskQueue->pop();
-            }
-
-            lock.release();
-
-            if (!tasks.empty())
-            {
-                for (auto task: tasks)
-                {
-                    task.Execute();
-                }
-            }
-        }
-    }).join();
 }
 
 ThreadPool::~ThreadPool()
@@ -59,11 +31,104 @@ ThreadPool::~ThreadPool()
 
 ThreadPool::ThreadPool()
 {
-    myTaskQueue = new std::queue<Task>();
+    mySingleThread = new ThreadPoolThread();
     myIsActive = new std::atomic<bool>(false);
 }
 
 bool ThreadPool::IsActive()
 {
     return myIsActive.load(std::memory_order_seq_cst);
+}
+
+TaskNode* TaskNode::GetPrevious()
+{
+    return myPrevious;
+}
+
+Task TaskNode::GetTask()
+{
+    return myTask;
+}
+
+TaskNode::TaskNode(const Task& task) : myTask(task)
+{
+}
+
+TaskNode* TaskNode::SetPrevious(TaskNode* previous)
+{
+    myPrevious = previous;
+}
+
+void TaskNodeList::PushTask(const Task& task)
+{
+    auto node = new TaskNode(task);
+    while (true)
+    {
+        auto currentTail = myTail.load(std::memory_order_seq_cst);
+        node->SetPrevious(currentTail);
+        if (myTail.compare_exchange_strong(currentTail, node))
+        {
+            break;
+        }
+    }
+}
+
+TaskNode* TaskNodeList::Devastate()
+{
+    while (true)
+    {
+        auto currentTail = myTail.load(std::memory_order_seq_cst);
+        if (myTail.compare_exchange_strong(currentTail, nullptr))
+        {
+            return currentTail;
+        }
+    }
+}
+
+void ThreadPoolThread::Start()
+{
+    if (myThread == nullptr)
+    {
+        myIsActive.store(true, std::memory_order_seq_cst);
+        myThread = new std::thread([=]()
+        {
+            while (true)
+            {
+                if (!myIsActive.load(std::memory_order_seq_cst))
+                {
+                    return;
+                }
+
+                auto task = myTasks->Devastate();
+                if (task != nullptr)
+                {
+                    BoolAtomicCookie cookie(&myIsProcessingTasks, true);
+                    {
+                        while (task != nullptr)
+                        {
+                            task->GetTask().Execute();
+                            task = task->GetPrevious();
+                        }
+                    }
+                }
+            }
+        });
+
+        myThread->detach();
+    }
+}
+
+ThreadPoolThread::ThreadPoolThread()
+{
+    myTasks = new TaskNodeList();
+}
+
+void ThreadPoolThread::Stop()
+{
+    myIsActive.store(false, std::memory_order_seq_cst);
+}
+
+void ThreadPoolThread::QueueTask(const Task& task)
+{
+    myTasks->PushTask(task);
 }

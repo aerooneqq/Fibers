@@ -34,6 +34,9 @@ SetContext:
     mov rdi, [rcx + 8 * 8]
     mov rsi, [rcx + 8 * 9]
 
+    mov rdx, [rcx + 8 * 11]
+    mov rcx, [rcx + 8 * 10]
+
     pushq r8
     xor rax, rax
     ret

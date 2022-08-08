@@ -1,23 +1,56 @@
-
 #include <queue>
 #include <mutex>
 #include "Task.h"
 
+class TaskNode {
+private:
+    Task myTask;
+    TaskNode* myPrevious{nullptr};
+
+public:
+    explicit TaskNode(const Task& task);
+    TaskNode* SetPrevious(TaskNode* node);
+    TaskNode* GetPrevious();
+    Task GetTask();
+};
+
+class TaskNodeList {
+private:
+    std::atomic<TaskNode*> myTail{nullptr};
+
+public:
+    void PushTask(const Task& task);
+    TaskNode* Devastate();
+};
+
+class ThreadPoolThread
+{
+private:
+    std::atomic<bool> myIsActive{false};
+    std::atomic<bool> myIsProcessingTasks{false};
+    std::thread* myThread{nullptr};
+    TaskNodeList* myTasks;
+
+public:
+    ThreadPoolThread();
+    void Start();
+    void Stop();
+    void QueueTask(const Task& task);
+};
+
 class ThreadPool
 {
 private:
-    std::atomic<bool> myIsExecutingTasks{false};
     std::atomic<bool> myIsActive{false};
-    std::mutex myMutex{};
-    std::queue<Task>* myTaskQueue;
+    ThreadPoolThread* mySingleThread;
 
 public:
     ThreadPool();
     ~ThreadPool();
 
     bool IsActive();
-    void StartBlocking();
-    void Schedule(Task task);
+    void Start();
+    void Schedule(const Task& task);
     void Stop();
     void WaitForAllTasksCompletion();
 };

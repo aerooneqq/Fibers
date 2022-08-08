@@ -3,7 +3,6 @@
 #include <vector>
 #include <functional>
 
-#include "util.h"
 #include "ExecutionContext.h"
 
 class Task;
@@ -11,14 +10,19 @@ class Task;
 class TaskController
 {
 private:
-    ExecutionContext* myExecutionContext;
+    ExecutionContext* myExecutionContext{nullptr};
 
 public:
+    Stack ObtainTaskStack();
+
+
     void Yield();
     void Cancel();
     void WithExclusiveAccess(Lock *lock, PureJobFunction job);
     void NestedParallel(const std::vector<Task> &tasks);
     void NestedSequential(const std::vector<Task> &tasks);
+
+    ~TaskController() = default;
 };
 
 typedef std::function<void(TaskController*)> TaskJobFunction;
@@ -30,6 +34,7 @@ private:
     std::atomic<bool> myIsCompleted{false};
     TaskJobFunction* myJob;
     TaskController* myController;
+    ExecutionContext* myExecutionContext;
 
 public:
     Task(const Task& other);

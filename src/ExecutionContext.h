@@ -1,11 +1,16 @@
+#include "util.h"
+
 class Stack
 {
 private:
-    char* myStack;
+    char* myStack{nullptr};
+    size_t mySize{0};
 
 public:
-    Stack(int size);
+    explicit Stack(size_t size);
     ~Stack();
+
+    int64_t MaterializeStackPointer();
 };
 
 class ExecutionContext {

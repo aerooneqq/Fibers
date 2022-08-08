@@ -1,6 +1,3 @@
-//
-// Created by aeroo on 8/7/2022.
-//
 #include <string>
 #include "util.h"
 
@@ -13,3 +10,15 @@ std::string Lock::GetName()
     return myName;
 }
 
+BoolAtomicCookie::BoolAtomicCookie(std::atomic<bool>* atomic, bool startValue)
+{
+    myStartValue = startValue;
+    myAtomic = atomic;
+    atomic->store(startValue, std::memory_order_seq_cst);
+}
+
+BoolAtomicCookie::~BoolAtomicCookie()
+{
+    myAtomic->store(!myStartValue, std::memory_order_seq_cst);
+    myAtomic = nullptr;
+}
