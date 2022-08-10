@@ -9,7 +9,7 @@ private:
 
 public:
     explicit TaskNode(const Task& task);
-    TaskNode* SetPrevious(TaskNode* node);
+    void SetPrevious(TaskNode* node);
     TaskNode* GetPrevious();
     Task GetTask();
 };
@@ -23,8 +23,7 @@ public:
     TaskNode* Devastate();
 };
 
-class ThreadPoolThread
-{
+class ThreadPoolThread {
 private:
     std::atomic<bool> myIsActive{false};
     std::atomic<bool> myIsProcessingTasks{false};
@@ -38,14 +37,16 @@ public:
     void QueueTask(const Task& task);
 };
 
-class ThreadPool
-{
+class ThreadPool {
 private:
+    static ThreadPool* ourInstance;
     std::atomic<bool> myIsActive{false};
     ThreadPoolThread* mySingleThread;
+    ThreadPool();
 
 public:
-    ThreadPool();
+    static ThreadPool* GetInstance();
+
     ~ThreadPool();
 
     bool IsActive();

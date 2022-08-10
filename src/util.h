@@ -4,29 +4,33 @@
 
 typedef void PureJobFunction();
 
-class Lock
-{
+struct RegisterContext;
+
+extern "C" void SetContext(RegisterContext* context);
+extern "C" void FillContext(RegisterContext* context);
+
+class Lock {
 private:
     std::string myName;
 
 public:
     explicit Lock(std::string name);
+
     std::string GetName();
 };
 
-class BoolAtomicCookie
-{
+class BoolAtomicCookie {
 private:
     bool myStartValue;
     std::atomic<bool>* myAtomic;
 public:
     BoolAtomicCookie(std::atomic<bool>* atomic, bool startValue);
+
     ~BoolAtomicCookie();
 };
 
 
-struct RegisterContext
-{
+struct RegisterContext {
     int64_t InstructionPointer{};
     int64_t StackPointer{};
     int64_t Rbx{};

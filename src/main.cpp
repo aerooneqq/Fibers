@@ -5,30 +5,27 @@
 
 using namespace std::chrono_literals;
 
-
-extern "C" void SetContext(RegisterContext* context);
-extern "C" void FillContext(RegisterContext* context);
-
 volatile int x = 0;
 RegisterContext savedContext{};
 
-int foo()
-{
+int foo() {
     std::cout << "Foo" << "\n";
     exit(1);
 }
 
-void Execute(TaskJobFunction* f, TaskController* c)
-{
-    (*f)(c);
+void Execute(TaskJobFunction* function, TaskController* controller) {
+    (*function)(controller);
     SetContext(&savedContext);
 }
 
-int main()
-{
+int main() {
+    TaskJobFunction ff = [](TaskController* c) {
+        std::cout << "Task controller: " << c << "\n";
+        std::cout << "Task job" << "\n";
+    };
+
     char stack[2 << 12];
-    for (char& i: stack)
-    {
+    for (char& i: stack) {
         i = 0;
     }
 
@@ -39,51 +36,40 @@ int main()
     std::cout << (void*) foo << " " << (int64_t) (void*) foo << "\n";
     std::cout << (int64_t) sp << "\n";
 
-
-    auto ff = new TaskJobFunction([](TaskController* c)
-    {
-        std::cout << "Task controller: " << c << "\n";
-        std::cout << "Task job" << "\n";
-    });
-
     RegisterContext context{};
-    auto controller = new TaskController();
+    auto controller = new TaskController(StackManager::GetInstance());
+    context.FirstIntArgument = (int64_t) &ff;
     context.SecondIntArgument = (int64_t) controller;
     context.InstructionPointer = (int64_t) (void*) Execute;
     context.StackPointer = (int64_t) sp;
-    context.FirstIntArgument = (int64_t) ff;
 
     FillContext(&savedContext);
-    if (x == 0)
-    {
+    if (x == 0) {
         if (x != 1) {
             ++x;
             SetContext(&context);
         }
     }
 
-    delete ff;
+    ThreadPool* pool = ThreadPool::GetInstance();
+    pool->Start();
 
-    ThreadPool pool{};
-    pool.Start();
-
-    TaskJobFunction func = [&pool](TaskController* controller)
-    {
-        std::cout << "ASDASD" << "\n";
+    auto func = new TaskJobFunction([](TaskController* controller) {
+        std::cout << "1" << "\n";
 
         controller->Yield();
 
-        std::cout << "ASDASD" << "\n";
-    };
+        std::cout << "2" << "\n";
+    });
 
-    pool.Schedule(Task("ASDASD", &func));
-    pool.Schedule(Task("ASDASD", &func));
-    pool.Schedule(Task("ASDASD", &func));
-    pool.Schedule(Task("ASDASD", &func));
+    pool->Schedule(Task("ASDASD", func));
+    pool->Schedule(Task("ASDASD", func));
+    pool->Schedule(Task("ASDASD", func));
+    pool->Schedule(Task("ASDASD", func));
 
     std::this_thread::sleep_for(2000ms);
 
-    pool.Stop();
+    pool->Stop();
 
     return 0;
 }

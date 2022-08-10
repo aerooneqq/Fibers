@@ -18,6 +18,17 @@ FillContext:
     mov [rcx + 8 * 8], rdi
     mov [rcx + 8 * 9], rsi
 
+    movups [rcx + 8 * 12 + 0 * 16], xmm6
+    movups [rcx + 8 * 12 + 1 * 16], xmm7
+    movups [rcx + 8 * 12 + 2 * 16], xmm8
+    movups [rcx + 8 * 12 + 3 * 16], xmm9
+    movups [rcx + 8 * 12 + 4 * 16], xmm10
+    movups [rcx + 8 * 12 + 5 * 16], xmm11
+    movups [rcx + 8 * 12 + 6 * 16], xmm12
+    movups [rcx + 8 * 12 + 7 * 16], xmm13
+    movups [rcx + 8 * 12 + 8 * 16], xmm14
+    movups [rcx + 8 * 12 + 9 * 16], xmm15
+
     xor rax, rax
     ret
 
@@ -35,8 +46,19 @@ SetContext:
     mov rsi, [rcx + 8 * 9]
 
     mov rdx, [rcx + 8 * 11]
-    mov rcx, [rcx + 8 * 10]
 
+    movups xmm6, [rcx + 8 * 12 + 0 * 16]
+    movups xmm7, [rcx + 8 * 12 + 1 * 16]
+    movups xmm8 ,[rcx + 8 * 12 + 2 * 16]
+    movups xmm9 ,[rcx + 8 * 12 + 3 * 16]
+    movups xmm10 ,[rcx + 8 * 12 + 4 * 16]
+    movups xmm11 ,[rcx + 8 * 12 + 5 * 16]
+    movups xmm12 ,[rcx + 8 * 12 + 6 * 16]
+    movups xmm13 ,[rcx + 8 * 12 + 7 * 16]
+    movups xmm14 ,[rcx + 8 * 12 + 8 * 16]
+    movups xmm15 ,[rcx + 8 * 12 + 9 * 16]
+
+    mov rcx, [rcx + 8 * 10]
     pushq r8
     xor rax, rax
     ret
