@@ -2,7 +2,9 @@
 
 class Stack {
 private:
-    char* myStack{nullptr};
+    bool myIsStackAllocated{false};
+    char* myStartStackPointer{nullptr};
+    char* myAlignedStackPointer{nullptr};
     size_t mySize{0};
 
 public:

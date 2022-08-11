@@ -4,8 +4,8 @@ Stack::Stack(size_t size) : mySize(size) {
 }
 
 int64_t Stack::MaterializeStackPointer() {
-    if (myStack != nullptr) {
-        return (int64_t) myStack;
+    if (myIsStackAllocated) {
+        return (int64_t) myAlignedStackPointer;
     }
 
     char stack[mySize];
@@ -13,33 +13,40 @@ int64_t Stack::MaterializeStackPointer() {
         stack[i] = 0;
     }
 
-    char* sp = (char*) (stack + sizeof(stack));
+    char* sp = (char*) stack;
+    myStartStackPointer = sp;
+    sp = (char*) (stack + sizeof(stack));
     sp = (char*) ((int64_t) sp & -16L);
     sp -= 128;
+    myAlignedStackPointer = sp;
+    myIsStackAllocated = true;
 
-    myStack = sp;
-    return (int64_t) sp;
+    return (int64_t) myAlignedStackPointer;
 }
 
 Stack::Stack(const Stack& stack) {
-    myStack = stack.myStack;
+    myAlignedStackPointer = stack.myAlignedStackPointer;
+    myStartStackPointer = stack.myStartStackPointer;
     mySize = stack.mySize;
 }
 
 Stack::Stack(Stack&& stack) noexcept {
-    myStack = stack.myStack;
+    myAlignedStackPointer = stack.myAlignedStackPointer;
+    myStartStackPointer = stack.myStartStackPointer;
     mySize = stack.mySize;
-    stack.myStack = nullptr;
+    stack.myAlignedStackPointer = nullptr;
+    stack.myStartStackPointer = nullptr;
     stack.mySize = -1;
 }
 
 void Stack::Destroy() {
-    delete[] myStack;
+    delete[] myStartStackPointer;
     mySize = -1;
 }
 
 Stack& Stack::operator=(Stack other) {
-    std::swap(myStack, other.myStack);
+    std::swap(myStartStackPointer, other.myStartStackPointer);
+    std::swap(myAlignedStackPointer, other.myAlignedStackPointer);
     std::swap(mySize, other.mySize);
     return *this;
 }
