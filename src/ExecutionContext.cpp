@@ -39,11 +39,6 @@ Stack::Stack(Stack&& stack) noexcept {
     stack.mySize = -1;
 }
 
-void Stack::Destroy() {
-    delete[] myStartStackPointer;
-    mySize = -1;
-}
-
 Stack& Stack::operator=(Stack other) {
     std::swap(myStartStackPointer, other.myStartStackPointer);
     std::swap(myAlignedStackPointer, other.myAlignedStackPointer);
@@ -51,7 +46,12 @@ Stack& Stack::operator=(Stack other) {
     return *this;
 }
 
-ExecutionContext::ExecutionContext(const RegisterContext& context, const Stack& stack) {
+Stack::~Stack() {
+    delete myStartStackPointer;
+    mySize = -1;
+}
+
+ExecutionContext::ExecutionContext(const RegisterContext& context, Stack* stack) {
     myRegisterContext = context;
     myStack = stack;
 }
@@ -67,12 +67,12 @@ ExecutionContext& ExecutionContext::operator=(ExecutionContext other) {
     return *this;
 }
 
-Stack StackManager::AllocateStack() {
-    return Stack(2 << 12);
+Stack* StackManager::AllocateStack() {
+    return new Stack(2 << 12);
 }
 
-void StackManager::ReturnStack(Stack stack) {
-    stack.Destroy();
+void StackManager::ReturnStack(Stack* stack) {
+    delete stack;
 }
 
 StackManager* StackManager::ourInstance = nullptr;

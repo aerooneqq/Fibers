@@ -18,6 +18,6 @@ download_project(
 
 add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-set(test_SRCS gtest.cpp ThreadPoolTests.cpp)
+set(test_SRCS gtest.cpp ThreadPoolTests.cpp ContextSwitchTests.cpp)
 add_executable(runUnitTests ${test_SRCS})
 target_link_libraries(runUnitTests gtest gmock fibers)

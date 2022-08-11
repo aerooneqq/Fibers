@@ -12,11 +12,11 @@ public:
     explicit Stack(size_t size);
     Stack(const Stack& stack);
     Stack(Stack&& stack) noexcept;
+    ~Stack();
 
     Stack& operator=(Stack other);
 
     int64_t MaterializeStackPointer();
-    void Destroy();
 };
 
 class StackManager {
@@ -25,19 +25,19 @@ private:
 
 public:
     static StackManager* GetInstance();
-    Stack AllocateStack();
+    Stack* AllocateStack();
 
-    void ReturnStack(Stack stack);
+    void ReturnStack(Stack* stack);
 };
 
 class ExecutionContext {
 private:
     RegisterContext myRegisterContext;
-    Stack myStack;
+    Stack* myStack;
 
 public:
     ExecutionContext() = default;
-    ExecutionContext(const RegisterContext& context, const Stack& stack);
+    ExecutionContext(const RegisterContext& context, Stack* stack);
     ExecutionContext(const ExecutionContext& context);
     ExecutionContext(ExecutionContext&& context) = delete;
 

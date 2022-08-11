@@ -1,4 +1,3 @@
-
 #include "TaskController.h"
 
 TaskController::TaskController(StackManager* stackManager) {
@@ -7,6 +6,7 @@ TaskController::TaskController(StackManager* stackManager) {
 }
 
 void TaskController::Yield() {
+
 }
 
 void TaskController::WithExclusiveAccess(Lock* lock, PureJobFunction job) {
@@ -15,13 +15,13 @@ void TaskController::WithExclusiveAccess(Lock* lock, PureJobFunction job) {
 void TaskController::Cancel() {
 }
 
-Stack TaskController::ObtainTaskStack() {
+Stack* TaskController::ObtainTaskStack() {
     return myStackManager->AllocateStack();
 }
 
 ExecutionContext TaskController::CreateExecutionContextAndSetStackPointer(RegisterContext& context) {
     auto stack = myStackManager->AllocateStack();
-    context.StackPointer = stack.MaterializeStackPointer();
+    context.StackPointer = stack->MaterializeStackPointer();
     myExecutionContext = ExecutionContext(context, stack);
     return myExecutionContext;
 }
@@ -32,4 +32,8 @@ void TaskController::SetInitialRegisterContext(const RegisterContext& context) {
 
 RegisterContext TaskController::GetInitialRegisterContext() const {
     return myInitialRegisterContext;
+}
+
+ExecutionContext TaskController::CaptureCurrentExecutionContext() {
+
 }

@@ -14,7 +14,7 @@ private:
     std::string myName;
     std::atomic<bool> myIsCompleted{false};
     TaskJobFunction myJob;
-    TaskController* myController;
+    TaskController* myController{nullptr};
 
 public:
     Task(const Task& other);

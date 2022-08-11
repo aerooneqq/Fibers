@@ -49,7 +49,7 @@ class ThreadPool {
 private:
     static ThreadPool* ourInstance;
     std::atomic<bool> myIsActive{false};
-    ThreadPoolThread* mySingleThread;
+    ThreadPoolThread* mySingleThread{nullptr};
     ThreadPool();
 
 public:

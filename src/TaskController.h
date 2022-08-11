@@ -18,7 +18,7 @@ private:
     ExecutionContext myExecutionContext;
     TaskExecutionState myState = TaskExecutionState::Uninitialized;
 
-    Stack ObtainTaskStack();
+    Stack* ObtainTaskStack();
     ExecutionContext CaptureCurrentExecutionContext();
 public:
     explicit TaskController(StackManager* stackManager);
