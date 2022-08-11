@@ -19,10 +19,14 @@ Stack* TaskController::ObtainTaskStack() {
     return myStackManager->AllocateStack();
 }
 
-ExecutionContext TaskController::CreateExecutionContextAndSetStackPointer(RegisterContext& context) {
+ExecutionContext* TaskController::CreateExecutionContext(const TaskJobFunction& job, void* wrapperFunction) {
+    RegisterContext context{};
+    context.FirstIntArgument = (int64_t) &job;
+    context.SecondIntArgument = (int64_t) this;
+    context.InstructionPointer = (int64_t) wrapperFunction;
     auto stack = myStackManager->AllocateStack();
     context.StackPointer = stack->MaterializeStackPointer();
-    myExecutionContext = ExecutionContext(context, stack);
+    myExecutionContext = new ExecutionContext(context, stack);
     return myExecutionContext;
 }
 

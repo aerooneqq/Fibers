@@ -1,8 +1,7 @@
 #include <atomic>
 #include "emmintrin.h"
+#include <functional>
 #include <iostream>
-
-typedef void PureJobFunction();
 
 struct RegisterContext;
 

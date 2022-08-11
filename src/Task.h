@@ -4,10 +4,7 @@
 #include <functional>
 
 #include "TaskController.h"
-
-class Task;
-
-typedef std::function<void(TaskController*)> TaskJobFunction;
+#include "typedefs.h"
 
 class Task {
 private:
@@ -15,6 +12,7 @@ private:
     std::atomic<bool> myIsCompleted{false};
     TaskJobFunction myJob;
     TaskController* myController{nullptr};
+
 
 public:
     Task(const Task& other);

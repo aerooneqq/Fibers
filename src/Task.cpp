@@ -35,10 +35,7 @@ void Task::Execute(const RegisterContext& savedContext) {
         SetContext(&contextToRestore);
     });
 
-    RegisterContext context{};
-    context.FirstIntArgument = (int64_t) &toExecute;
-    context.SecondIntArgument = (int64_t) myController;
-    context.InstructionPointer = (int64_t) (void*) ExecuteForAsmReference;
-    myController->CreateExecutionContextAndSetStackPointer(context);
-    SetContext(&context);
+    auto context = myController->CreateExecutionContext(toExecute, (void*) ExecuteForAsmReference);
+    auto registerContext = context->GetRegisterContext();
+    SetContext(&registerContext);
 }

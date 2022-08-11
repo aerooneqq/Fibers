@@ -42,4 +42,6 @@ public:
     ExecutionContext(ExecutionContext&& context) = delete;
 
     ExecutionContext& operator=(ExecutionContext other);
+
+    RegisterContext GetRegisterContext();
 };

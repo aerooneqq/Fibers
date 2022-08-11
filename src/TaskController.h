@@ -1,5 +1,6 @@
 #include <vector>
 #include "ExecutionContext.h"
+#include "typedefs.h"
 
 enum TaskExecutionState {
     Uninitialized,
@@ -15,7 +16,7 @@ class TaskController {
 private:
     StackManager* myStackManager;
     RegisterContext myInitialRegisterContext;
-    ExecutionContext myExecutionContext;
+    ExecutionContext* myExecutionContext;
     TaskExecutionState myState = TaskExecutionState::Uninitialized;
 
     Stack* ObtainTaskStack();
@@ -26,7 +27,7 @@ public:
     [[nodiscard]] RegisterContext GetInitialRegisterContext() const;
     void SetInitialRegisterContext(const RegisterContext& context);
 
-    ExecutionContext CreateExecutionContextAndSetStackPointer(RegisterContext& context);
+    ExecutionContext* CreateExecutionContext(const TaskJobFunction& job, void* wrapperFunction);
 
     void Yield();
     void Cancel();

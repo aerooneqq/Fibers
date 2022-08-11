@@ -67,6 +67,10 @@ ExecutionContext& ExecutionContext::operator=(ExecutionContext other) {
     return *this;
 }
 
+RegisterContext ExecutionContext::GetRegisterContext() {
+    return myRegisterContext;
+}
+
 Stack* StackManager::AllocateStack() {
     return new Stack(2 << 12);
 }
