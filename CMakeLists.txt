@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.23)
+cmake_minimum_required(VERSION 3.3)
 project(Fibers CXX ASM)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set_property(SOURCE src/switch.S APPEND PROPERTY COMPILE_OPTIONS "-x" "assembler-with-cpp")
-add_executable(Fibers src/main.cpp src/switch.S src/Task.cpp src/Task.h src/ThreadPool.cpp src/ThreadPool.h src/ExecutionContext.cpp src/ExecutionContext.h src/util.h src/util.cpp src/TaskController.cpp src/TaskController.h)
+add_subdirectory(src)
+add_subdirectory(test)

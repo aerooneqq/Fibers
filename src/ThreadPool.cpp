@@ -3,17 +3,22 @@
 
 ThreadPool* ThreadPool::ourInstance = new ThreadPool();
 
-void ThreadPool::Schedule(const Task& task) {
-    mySingleThread->QueueTask(task);
+bool ThreadPool::Schedule(const Task& task) {
+    if (!myIsActive.load(std::memory_order_seq_cst)) {
+        return false;
+    }
+
+    return mySingleThread->QueueTask(task);
 }
 
-void ThreadPool::Stop() {
-    mySingleThread->Stop();
+void ThreadPool::StopAndWaitForScheduledTasksCompletion() {
+    mySingleThread->Shutdown();
+    mySingleThread->WaitForRemainingTasksCompletion();
     myIsActive.store(false, std::memory_order_seq_cst);
 }
 
 void ThreadPool::WaitForAllTasksCompletion() {
-
+    mySingleThread->WaitForRemainingTasksCompletion();
 }
 
 void ThreadPool::Start() {
@@ -74,12 +79,26 @@ TaskNode* TaskNodeList::Devastate() {
     }
 }
 
+bool TaskNodeList::IsEmpty() {
+    return myTail.load(std::memory_order_seq_cst) == nullptr;
+}
+
+TaskNodeList::~TaskNodeList() {
+    auto tail = myTail.load(std::memory_order_seq_cst);
+    while (tail != nullptr) {
+        auto current = tail;
+        tail = current->GetPrevious();
+        delete current;
+    }
+}
+
 void ThreadPoolThread::Start() {
     if (myThread == nullptr) {
-        myIsActive.store(true, std::memory_order_seq_cst);
+        myIsActive.store(true, std::memory_order_release);
         myThread = new std::thread([=]() {
             while (true) {
-                if (!myIsActive.load(std::memory_order_seq_cst)) {
+                if (myWasToldToShutdown.load(std::memory_order_acquire) && myTasks->IsEmpty()) {
+                    myIsActive.store(false, std::memory_order_release);
                     return;
                 }
 
@@ -97,7 +116,9 @@ void ThreadPoolThread::Start() {
                             task->GetTask().Execute(registerContext);
                         }
 
+                        auto currentTask = task;
                         task = task->GetPrevious();
+                        delete currentTask;
                     }
                 }
             }
@@ -111,10 +132,24 @@ ThreadPoolThread::ThreadPoolThread() {
     myTasks = new TaskNodeList();
 }
 
-void ThreadPoolThread::Stop() {
-    myIsActive.store(false, std::memory_order_seq_cst);
+void ThreadPoolThread::Shutdown() {
+    myWasToldToShutdown.store(true, std::memory_order_release);
 }
 
-void ThreadPoolThread::QueueTask(const Task& task) {
+bool ThreadPoolThread::QueueTask(const Task& task) {
     myTasks->PushTask(task);
+    return true;
+}
+
+void ThreadPoolThread::WaitForRemainingTasksCompletion() {
+    while (myIsActive.load(std::memory_order_acquire)) {
+        if (!myIsActive.load(std::memory_order_relaxed)) {
+            return;
+        }
+    }
+}
+
+ThreadPoolThread::~ThreadPoolThread() {
+    delete myTasks;
+    delete myThread;
 }

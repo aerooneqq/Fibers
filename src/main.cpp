@@ -54,7 +54,7 @@ int main() {
     ThreadPool* pool = ThreadPool::GetInstance();
     pool->Start();
 
-    auto func = new TaskJobFunction([](TaskController* controller) {
+    TaskJobFunction func([](TaskController* controller) {
         std::cout << "1" << "\n";
 
         controller->Yield();
@@ -69,7 +69,7 @@ int main() {
 
     std::this_thread::sleep_for(2000ms);
 
-    pool->Stop();
+    pool->StopAndWaitForScheduledTasksCompletion();
 
     return 0;
 }

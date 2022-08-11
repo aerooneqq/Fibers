@@ -19,12 +19,12 @@ private:
     TaskExecutionState myState = TaskExecutionState::Uninitialized;
 
     Stack ObtainTaskStack();
-
+    ExecutionContext CaptureCurrentExecutionContext();
 public:
     explicit TaskController(StackManager* stackManager);
 
+    [[nodiscard]] RegisterContext GetInitialRegisterContext() const;
     void SetInitialRegisterContext(const RegisterContext& context);
-    RegisterContext GetInitialRegisterContext() const;
 
     ExecutionContext CreateExecutionContextAndSetStackPointer(RegisterContext& context);
 

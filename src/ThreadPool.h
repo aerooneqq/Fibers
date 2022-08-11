@@ -1,5 +1,6 @@
 #include <queue>
 #include <mutex>
+#include <thread>
 #include "Task.h"
 
 class TaskNode {
@@ -19,12 +20,16 @@ private:
     std::atomic<TaskNode*> myTail{nullptr};
 
 public:
+    ~TaskNodeList();
+
     void PushTask(const Task& task);
     TaskNode* Devastate();
+    bool IsEmpty();
 };
 
 class ThreadPoolThread {
 private:
+    std::atomic<bool> myWasToldToShutdown{false};
     std::atomic<bool> myIsActive{false};
     std::atomic<bool> myIsProcessingTasks{false};
     std::thread* myThread{nullptr};
@@ -32,9 +37,12 @@ private:
 
 public:
     ThreadPoolThread();
+    ~ThreadPoolThread();
+
     void Start();
-    void Stop();
-    void QueueTask(const Task& task);
+    void Shutdown();
+    bool QueueTask(const Task& task);
+    void WaitForRemainingTasksCompletion();
 };
 
 class ThreadPool {
@@ -51,7 +59,7 @@ public:
 
     bool IsActive();
     void Start();
-    void Schedule(const Task& task);
-    void Stop();
+    bool Schedule(const Task& task);
+    void StopAndWaitForScheduledTasksCompletion();
     void WaitForAllTasksCompletion();
 };

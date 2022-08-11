@@ -10,11 +10,9 @@ void TaskController::Yield() {
 }
 
 void TaskController::WithExclusiveAccess(Lock* lock, PureJobFunction job) {
-
 }
 
 void TaskController::Cancel() {
-
 }
 
 Stack TaskController::ObtainTaskStack() {

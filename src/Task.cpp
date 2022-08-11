@@ -10,7 +10,7 @@ bool Task::IsCompleted() {
     return myIsCompleted.load(std::memory_order_seq_cst);
 }
 
-Task::Task(std::string name, TaskJobFunction* job) : myName(std::move(name)) {
+Task::Task(std::string name, const TaskJobFunction& job) : myName(std::move(name)) {
     myJob = job;
     myController = new TaskController(StackManager::GetInstance());
 }
@@ -30,7 +30,7 @@ void Task::Execute(const RegisterContext& savedContext) {
     myController->SetInitialRegisterContext(savedContext);
 
     TaskJobFunction toExecute([=](TaskController* controller) {
-        (*myJob)(controller);
+        myJob(controller);
         auto contextToRestore = myController->GetInitialRegisterContext();
         SetContext(&contextToRestore);
     });
