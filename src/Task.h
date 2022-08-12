@@ -13,11 +13,14 @@ private:
     TaskJobFunction myJob;
     TaskController* myController{nullptr};
 
-
 public:
     Task(const Task& other);
     Task(std::string name, const TaskJobFunction& job);
+
     std::string GetName();
+
     bool IsCompleted();
     void Execute(const RegisterContext& savedContext);
+
+    [[nodiscard]] TaskController* GetController() const;
 };

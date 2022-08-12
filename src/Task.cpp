@@ -12,7 +12,7 @@ bool Task::IsCompleted() {
 
 Task::Task(std::string name, const TaskJobFunction& job) : myName(std::move(name)) {
     myJob = job;
-    myController = new TaskController(StackManager::GetInstance());
+    myController = new TaskController(StackManager::GetInstance(), this);
 }
 
 Task::Task(const Task& other) {
@@ -27,15 +27,31 @@ void ExecuteForAsmReference(TaskJobFunction* function, TaskController* controlle
 }
 
 void Task::Execute(const RegisterContext& savedContext) {
-    myController->SetInitialRegisterContext(savedContext);
+    auto existingExecutionContext = myController->GetExecutionContext();
+    if (existingExecutionContext != nullptr) {
+        auto context = existingExecutionContext->GetRegisterContext();
+        myController->SetState(TaskExecutionState::ReExecuted);
+        SetContext(&context);
+        return;
+    }
 
+    myController->SetInitialRegisterContext(savedContext);
     TaskJobFunction toExecute([=](TaskController* controller) {
         myJob(controller);
-        auto contextToRestore = myController->GetInitialRegisterContext();
-        SetContext(&contextToRestore);
+        std::cout << "Finished executing task" << "\n";
+        controller->SetState(TaskExecutionState::Finished);
+        auto context = controller->GetInitialRegisterContext();
+        SetContext(&context);
     });
 
     auto context = myController->CreateExecutionContext(toExecute, (void*) ExecuteForAsmReference);
     auto registerContext = context->GetRegisterContext();
+
+    myController->SetState(TaskExecutionState::StartedExecution);
+
     SetContext(&registerContext);
+}
+
+TaskController* Task::GetController() const {
+    return myController;
 }

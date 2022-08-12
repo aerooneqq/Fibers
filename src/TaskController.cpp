@@ -1,14 +1,5 @@
 #include "TaskController.h"
 
-TaskController::TaskController(StackManager* stackManager) {
-    myStackManager = stackManager;
-    myState = TaskExecutionState::Created;
-}
-
-void TaskController::Yield() {
-
-}
-
 void TaskController::WithExclusiveAccess(Lock* lock, PureJobFunction job) {
 }
 
@@ -17,6 +8,18 @@ void TaskController::Cancel() {
 
 Stack* TaskController::ObtainTaskStack() {
     return myStackManager->AllocateStack();
+}
+
+void TaskController::SetState(TaskExecutionState newState) {
+    myState = newState;
+}
+
+TaskExecutionState TaskController::GetState() {
+    return myState;
+}
+
+ExecutionContext* TaskController::GetExecutionContext() {
+    return myExecutionContext;
 }
 
 ExecutionContext* TaskController::CreateExecutionContext(const TaskJobFunction& job, void* wrapperFunction) {
@@ -41,3 +44,8 @@ RegisterContext TaskController::GetInitialRegisterContext() const {
 ExecutionContext TaskController::CaptureCurrentExecutionContext() {
 
 }
+
+TaskController::~TaskController() {
+}
+
+

@@ -71,8 +71,12 @@ RegisterContext ExecutionContext::GetRegisterContext() {
     return myRegisterContext;
 }
 
+void ExecutionContext::SetRegisterContext(const RegisterContext& newContext) {
+    myRegisterContext = RegisterContext(newContext);
+}
+
 Stack* StackManager::AllocateStack() {
-    return new Stack(2 << 12);
+    return new Stack(2 << 15);
 }
 
 void StackManager::ReturnStack(Stack* stack) {

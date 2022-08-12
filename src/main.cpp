@@ -19,53 +19,30 @@ void Execute(TaskJobFunction* function, TaskController* controller) {
 }
 
 int main() {
-    TaskJobFunction ff = [](TaskController* c) {
-        std::cout << "Task controller: " << c << "\n";
-        std::cout << "Task job" << "\n";
-    };
-
-    char stack[2 << 12];
-    for (char& i: stack) {
-        i = 0;
-    }
-
-    char* sp = (char*) (stack + sizeof(stack));
-    sp = (char*) ((uintptr_t) sp & -16L);
-    sp -= 128;
-
-    std::cout << (void*) foo << " " << (int64_t) (void*) foo << "\n";
-    std::cout << (int64_t) sp << "\n";
-
-    RegisterContext context{};
-    auto controller = new TaskController(StackManager::GetInstance());
-    context.FirstIntArgument = (int64_t) &ff;
-    context.SecondIntArgument = (int64_t) controller;
-    context.InstructionPointer = (int64_t) (void*) Execute;
-    context.StackPointer = (int64_t) sp;
-
-    FillContext(&savedContext);
-    if (x == 0) {
-        if (x != 1) {
-            ++x;
-            SetContext(&context);
-        }
-    }
-
     ThreadPool* pool = ThreadPool::GetInstance();
     pool->Start();
 
     TaskJobFunction func([](TaskController* controller) {
-        std::cout << "1" << "\n";
+        std::cout << "A" << "\n";
+        volatile int x = 0;
+        //RegisterContext currentContext{};
+//    FillContext(&currentContext);
+//
+        std::cout << x;
+        //controller->Yield();
 
-        controller->Yield();
-
-        std::cout << "2" << "\n";
+        std::cout << "B" << "\n";
     });
 
-    pool->Schedule(Task("ASDASD", func));
-    pool->Schedule(Task("ASDASD", func));
-    pool->Schedule(Task("ASDASD", func));
-    pool->Schedule(Task("ASDASD", func));
+    auto task = Task("1", func);
+    auto task1 = Task("2", func);
+    auto task2 = Task("3", func);
+    auto task3 = Task("4", func);
+
+    pool->Schedule(task);
+//    pool->Schedule(task1);
+//    pool->Schedule(task2);
+//    pool->Schedule(task3);
 
     std::this_thread::sleep_for(2000ms);
 

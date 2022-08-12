@@ -8,7 +8,7 @@ private:
     size_t mySize{0};
 
 public:
-    Stack() = default;
+    Stack() = delete;
     explicit Stack(size_t size);
     Stack(const Stack& stack);
     Stack(Stack&& stack) noexcept;
@@ -33,7 +33,7 @@ public:
 class ExecutionContext {
 private:
     RegisterContext myRegisterContext;
-    Stack* myStack;
+    Stack* myStack{nullptr};
 
 public:
     ExecutionContext() = default;
@@ -44,4 +44,5 @@ public:
     ExecutionContext& operator=(ExecutionContext other);
 
     RegisterContext GetRegisterContext();
+    void SetRegisterContext(const RegisterContext& newContext);
 };

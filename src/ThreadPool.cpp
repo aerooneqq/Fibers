@@ -1,4 +1,5 @@
 #include <thread>
+#include <stack>
 #include "ThreadPool.h"
 
 ThreadPool* ThreadPool::ourInstance = new ThreadPool();
@@ -105,20 +106,26 @@ void ThreadPoolThread::Start() {
                 auto task = myTasks->Devastate();
                 if (task != nullptr) {
                     BoolAtomicCookie cookie(&myIsProcessingTasks, true);
-
+                    std::stack<TaskNode*> tasksToExecute;
                     while (task != nullptr) {
+                        tasksToExecute.push(task);
+                        task = task->GetPrevious();
+                    }
+
+                    while (!tasksToExecute.empty()) {
                         volatile int x = 0;
+                        auto currentTask = tasksToExecute.top();
+                        tasksToExecute.pop();
+
                         RegisterContext registerContext{};
                         FillContext(&registerContext);
 
                         if (x == 0) {
                             ++x;
-                            task->GetTask().Execute(registerContext);
+                            auto realTask = currentTask->GetTask();
+                            std::cout << "Executing task with name: " << realTask.GetName() << "\n";
+                            realTask.Execute(registerContext);
                         }
-
-                        auto currentTask = task;
-                        task = task->GetPrevious();
-                        delete currentTask;
                     }
                 }
             }
@@ -138,6 +145,7 @@ void ThreadPoolThread::Shutdown() {
 
 bool ThreadPoolThread::QueueTask(const Task& task) {
     myTasks->PushTask(task);
+    task.GetController()->SetState(TaskExecutionState::InitiallyQueued);
     return true;
 }
 
@@ -152,4 +160,28 @@ void ThreadPoolThread::WaitForRemainingTasksCompletion() {
 ThreadPoolThread::~ThreadPoolThread() {
     delete myTasks;
     delete myThread;
+}
+
+TaskController::TaskController(StackManager* stackManager, Task* task) {
+    myStackManager = stackManager;
+    myState = TaskExecutionState::Created;
+    myThreadPool = ThreadPool::GetInstance();
+    myTask = task;
+}
+
+void TaskController::Yield() {
+    volatile int x = 0;
+    //RegisterContext currentContext{};
+//    FillContext(&currentContext);
+//
+    std::cout << "X: " << x << "\n";
+//
+//    if (x == 0) {
+//        ++x;
+//        myExecutionContext->SetRegisterContext(currentContext);
+//        SetState(TaskExecutionState::Yielding);
+//        myThreadPool->Schedule(*myTask);
+//
+//        SetContext(&myInitialRegisterContext);
+//    }
 }
