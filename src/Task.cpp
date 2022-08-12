@@ -26,30 +26,38 @@ void ExecuteForAsmReference(TaskJobFunction* function, TaskController* controlle
     (*function)(controller);
 }
 
-void Task::Execute(const RegisterContext& savedContext) {
-    auto existingExecutionContext = myController->GetExecutionContext();
-    if (existingExecutionContext != nullptr) {
-        auto context = existingExecutionContext->GetRegisterContext();
-        myController->SetState(TaskExecutionState::ReExecuted);
-        SetContext(&context);
-        return;
+void Task::Execute() {
+    volatile int x = 0;
+    RegisterContext savedContext;
+    FillContext(&savedContext);
+
+    if (x == 0) {
+        ++x;
+        auto existingExecutionContext = myController->GetExecutionContext();
+        if (existingExecutionContext != nullptr) {
+            auto context = existingExecutionContext->Restore();
+            myController->SetState(TaskExecutionState::ReExecuted);
+            SetContext(&context);
+            return;
+        }
+
+        myController->SetInitialRegisterContext(savedContext);
+        TaskJobFunction toExecute([=](TaskController* controller) {
+            myJob(controller);
+            std::cout << "Finished executing task" << "\n";
+            controller->SetState(TaskExecutionState::Finished);
+            auto context = controller->GetInitialRegisterContext();
+            SetContext(&context);
+        });
+
+        auto context = myController->CreateExecutionContext(toExecute, (void*) ExecuteForAsmReference);
+        auto registerContext = context->GetRegisterContext();
+
+        myController->SetState(TaskExecutionState::StartedExecution);
+
+        SetContext(&registerContext);
     }
 
-    myController->SetInitialRegisterContext(savedContext);
-    TaskJobFunction toExecute([=](TaskController* controller) {
-        myJob(controller);
-        std::cout << "Finished executing task" << "\n";
-        controller->SetState(TaskExecutionState::Finished);
-        auto context = controller->GetInitialRegisterContext();
-        SetContext(&context);
-    });
-
-    auto context = myController->CreateExecutionContext(toExecute, (void*) ExecuteForAsmReference);
-    auto registerContext = context->GetRegisterContext();
-
-    myController->SetState(TaskExecutionState::StartedExecution);
-
-    SetContext(&registerContext);
 }
 
 TaskController* Task::GetController() const {

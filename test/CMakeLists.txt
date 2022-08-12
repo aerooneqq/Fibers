@@ -7,7 +7,7 @@ enable_testing()
 
 set(REPO ~/ClionProjects/.repo)
 
-set(gtest_disable_pthreads on)
+
 include(${REPO}/DownloadProject/DownloadProject.cmake)
 download_project(
         PROJ                googletest

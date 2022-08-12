@@ -5,31 +5,15 @@
 
 using namespace std::chrono_literals;
 
-volatile int x = 0;
-RegisterContext savedContext{};
-
-int foo() {
-    std::cout << "Foo" << "\n";
-    exit(1);
-}
-
-void Execute(TaskJobFunction* function, TaskController* controller) {
-    (*function)(controller);
-    SetContext(&savedContext);
-}
-
 int main() {
     ThreadPool* pool = ThreadPool::GetInstance();
     pool->Start();
 
-    TaskJobFunction func([](TaskController* controller) {
+    int x = 123123;
+    TaskJobFunction func([&x](TaskController* controller) {
         std::cout << "A" << "\n";
-        volatile int x = 0;
-        //RegisterContext currentContext{};
-//    FillContext(&currentContext);
-//
-        std::cout << x;
-        //controller->Yield();
+
+        controller->Yield();
 
         std::cout << "B" << "\n";
     });
@@ -40,11 +24,7 @@ int main() {
     auto task3 = Task("4", func);
 
     pool->Schedule(task);
-//    pool->Schedule(task1);
-//    pool->Schedule(task2);
-//    pool->Schedule(task3);
-
-    std::this_thread::sleep_for(2000ms);
+    //pool->Schedule(task1);
 
     pool->StopAndWaitForScheduledTasksCompletion();
 

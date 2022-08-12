@@ -106,26 +106,18 @@ void ThreadPoolThread::Start() {
                 auto task = myTasks->Devastate();
                 if (task != nullptr) {
                     BoolAtomicCookie cookie(&myIsProcessingTasks, true);
-                    std::stack<TaskNode*> tasksToExecute;
+
                     while (task != nullptr) {
-                        tasksToExecute.push(task);
+                        myTasksToExecute->push(task);
                         task = task->GetPrevious();
                     }
 
-                    while (!tasksToExecute.empty()) {
-                        volatile int x = 0;
-                        auto currentTask = tasksToExecute.top();
-                        tasksToExecute.pop();
-
-                        RegisterContext registerContext{};
-                        FillContext(&registerContext);
-
-                        if (x == 0) {
-                            ++x;
-                            auto realTask = currentTask->GetTask();
-                            std::cout << "Executing task with name: " << realTask.GetName() << "\n";
-                            realTask.Execute(registerContext);
-                        }
+                    while (!myTasksToExecute->empty()) {
+                        auto currentTask = myTasksToExecute->top();
+                        myTasksToExecute->pop();
+                        auto realTask = currentTask->GetTask();
+                        std::cout << "Executing task with name: " << realTask.GetName() << "\n";
+                        realTask.Execute();
                     }
                 }
             }
@@ -137,6 +129,7 @@ void ThreadPoolThread::Start() {
 
 ThreadPoolThread::ThreadPoolThread() {
     myTasks = new TaskNodeList();
+    myTasksToExecute = new std::stack<TaskNode*>();
 }
 
 void ThreadPoolThread::Shutdown() {
@@ -160,6 +153,7 @@ void ThreadPoolThread::WaitForRemainingTasksCompletion() {
 ThreadPoolThread::~ThreadPoolThread() {
     delete myTasks;
     delete myThread;
+    delete myTasksToExecute;
 }
 
 TaskController::TaskController(StackManager* stackManager, Task* task) {
@@ -171,17 +165,25 @@ TaskController::TaskController(StackManager* stackManager, Task* task) {
 
 void TaskController::Yield() {
     volatile int x = 0;
-    //RegisterContext currentContext{};
-//    FillContext(&currentContext);
-//
-    std::cout << "X: " << x << "\n";
-//
-//    if (x == 0) {
-//        ++x;
-//        myExecutionContext->SetRegisterContext(currentContext);
-//        SetState(TaskExecutionState::Yielding);
-//        myThreadPool->Schedule(*myTask);
-//
-//        SetContext(&myInitialRegisterContext);
-//    }
+    RegisterContext currentContext{};
+    FillContext(&currentContext);
+
+    auto snapshot = std::vector<char>();
+    if (x == 0) {
+        auto start = (char*)currentContext.StackPointer;
+        auto end = (char*)myExecutionContext->GetStack()->GetAlignedStackPointer();
+
+        for (auto ptr = end - 1; ptr != start; --ptr) {
+            snapshot.push_back(*ptr);
+        }
+    }
+
+    if (x == 0) {
+        ++x;
+        SetState(TaskExecutionState::Yielding);
+        myExecutionContext->Save(currentContext, snapshot);
+        myThreadPool->Schedule(*myTask);
+
+        SetContext(myInitialRegisterContext);
+    }
 }

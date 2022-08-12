@@ -34,11 +34,11 @@ ExecutionContext* TaskController::CreateExecutionContext(const TaskJobFunction& 
 }
 
 void TaskController::SetInitialRegisterContext(const RegisterContext& context) {
-    myInitialRegisterContext = context;
+    myInitialRegisterContext = new RegisterContext(context);
 }
 
 RegisterContext TaskController::GetInitialRegisterContext() const {
-    return myInitialRegisterContext;
+    return *myInitialRegisterContext;
 }
 
 ExecutionContext TaskController::CaptureCurrentExecutionContext() {

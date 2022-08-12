@@ -1,6 +1,7 @@
 #include <queue>
 #include <mutex>
 #include <thread>
+#include <stack>
 #include "Task.h"
 
 class TaskNode {
@@ -34,6 +35,8 @@ private:
     std::atomic<bool> myIsProcessingTasks{false};
     std::thread* myThread{nullptr};
     TaskNodeList* myTasks;
+    std::stack<TaskNode*>* myTasksToExecute{nullptr};
+
 
 public:
     ThreadPoolThread();

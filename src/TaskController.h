@@ -19,7 +19,7 @@ class Task;
 class TaskController {
 private:
     StackManager* myStackManager{nullptr};
-    RegisterContext myInitialRegisterContext;
+    RegisterContext* myInitialRegisterContext{nullptr};
     ExecutionContext* myExecutionContext{nullptr};
     TaskExecutionState myState = TaskExecutionState::Uninitialized;
     ThreadPool* myThreadPool{nullptr};

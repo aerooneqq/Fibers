@@ -20,7 +20,7 @@ public:
     std::string GetName();
 
     bool IsCompleted();
-    void Execute(const RegisterContext& savedContext);
+    void Execute();
 
     [[nodiscard]] TaskController* GetController() const;
 };

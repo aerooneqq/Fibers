@@ -1,10 +1,20 @@
 #include "util.h"
 
+class StackSnapshot {
+private:
+    std::vector<char>* mySnapshot;
+public:
+    void Save(const std::vector<char>& snapshot);
+    void SetBytes(char* stackStart);
+    int GetSize();
+};
+
 class Stack {
 private:
     bool myIsStackAllocated{false};
     char* myStartStackPointer{nullptr};
     char* myAlignedStackPointer{nullptr};
+    StackSnapshot* mySnapshot{nullptr};
     size_t mySize{0};
 
 public:
@@ -17,6 +27,10 @@ public:
     Stack& operator=(Stack other);
 
     int64_t MaterializeStackPointer();
+    int64_t GetAlignedStackPointer();
+    void SaveSnapshot(const std::vector<char>& snapshot);
+
+    bool HasSavedSnapshot();
 };
 
 class StackManager {
@@ -32,7 +46,7 @@ public:
 
 class ExecutionContext {
 private:
-    RegisterContext myRegisterContext;
+    RegisterContext* myRegisterContext;
     Stack* myStack{nullptr};
 
 public:
@@ -44,5 +58,8 @@ public:
     ExecutionContext& operator=(ExecutionContext other);
 
     RegisterContext GetRegisterContext();
-    void SetRegisterContext(const RegisterContext& newContext);
+    Stack* GetStack();
+
+    RegisterContext Restore();
+    void Save(const RegisterContext& newContext, const std::vector<char>& snapshot);
 };

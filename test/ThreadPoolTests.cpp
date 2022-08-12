@@ -7,7 +7,7 @@ TEST(ThreadPoolTests, TestQueueOneTask) {
     auto x = 0;
 
     ExecuteWithThreadPool([&x](ThreadPool* pool) {
-        pool->Schedule(Task("Hello", [&x](TaskController* controller) {
+        pool->Schedule(Task("TestQueueOneTask", [&x](TaskController* controller) {
             ++x;
         }));
     });
@@ -21,7 +21,7 @@ TEST(ThreadPoolTests, TestQueueSeveralTasks) {
 
     ExecuteWithThreadPool([&x](ThreadPool* pool) {
         for (int i = 0; i < TasksCount; ++i) {
-            pool->Schedule(Task("Hello", [&x](TaskController* controller) {
+            pool->Schedule(Task("TestQueueSeveralTasks", [&x](TaskController* controller) {
                 ++x;
             }));
         }
