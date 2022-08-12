@@ -168,20 +168,10 @@ void TaskController::Yield() {
     RegisterContext currentContext{};
     FillContext(&currentContext);
 
-    auto snapshot = std::vector<char>();
-    if (x == 0) {
-        auto start = (char*)currentContext.StackPointer;
-        auto end = (char*)myExecutionContext->GetStack()->GetAlignedStackPointer();
-
-        for (auto ptr = end - 1; ptr != start; --ptr) {
-            snapshot.push_back(*ptr);
-        }
-    }
-
     if (x == 0) {
         ++x;
         SetState(TaskExecutionState::Yielding);
-        myExecutionContext->Save(currentContext, snapshot);
+        myExecutionContext->Save(currentContext);
         myThreadPool->Schedule(*myTask);
 
         SetContext(myInitialRegisterContext);

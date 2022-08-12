@@ -24,7 +24,7 @@ int main() {
     auto task3 = Task("4", func);
 
     pool->Schedule(task);
-    //pool->Schedule(task1);
+    pool->Schedule(task1);
 
     pool->StopAndWaitForScheduledTasksCompletion();
 

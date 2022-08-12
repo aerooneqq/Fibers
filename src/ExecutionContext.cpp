@@ -24,9 +24,9 @@ int64_t Stack::MaterializeStackPointer() {
     return (int64_t) myAlignedStackPointer;
 }
 
-void Stack::SaveSnapshot(const std::vector<char>& snapshot) {
+void Stack::SaveSnapshot(const char* stackPointer) {
     mySnapshot = new StackSnapshot();
-    mySnapshot->Save(snapshot);
+    mySnapshot->Save(stackPointer, myAlignedStackPointer);
 }
 
 Stack* StackManager::AllocateStack() {
@@ -94,9 +94,9 @@ RegisterContext ExecutionContext::Restore() {
     return context;
 }
 
-void ExecutionContext::Save(const RegisterContext& newContext, const std::vector<char>& snapshot) {
+void ExecutionContext::Save(const RegisterContext& newContext) {
+    myStack->SaveSnapshot((char*)newContext.StackPointer);
     myRegisterContext = new RegisterContext(newContext);
-    myStack->SaveSnapshot(snapshot);
 }
 
 RegisterContext ExecutionContext::GetRegisterContext() {
@@ -120,12 +120,12 @@ StackManager* StackManager::GetInstance() {
     return StackManager::ourInstance;
 }
 
-void StackSnapshot::Save(const std::vector<char>& snapshot) {
+void StackSnapshot::Save(const char* stackPointer, const char* stackStart) {
     delete mySnapshot;
     mySnapshot = new std::vector<char>();
 
-    for (char byte : snapshot) {
-        mySnapshot->push_back(byte);
+    for (auto ptr = stackStart; ptr != stackPointer; --ptr) {
+        mySnapshot->push_back(*ptr);
     }
 }
 

@@ -4,7 +4,7 @@ class StackSnapshot {
 private:
     std::vector<char>* mySnapshot;
 public:
-    void Save(const std::vector<char>& snapshot);
+    void Save(const char* stackPointer, const char* stackStart);
     void SetBytes(char* stackStart);
     int GetSize();
 };
@@ -28,7 +28,7 @@ public:
 
     int64_t MaterializeStackPointer();
     int64_t GetAlignedStackPointer();
-    void SaveSnapshot(const std::vector<char>& snapshot);
+    void SaveSnapshot(const char* stackPointer);
 
     bool HasSavedSnapshot();
 };
@@ -61,5 +61,5 @@ public:
     Stack* GetStack();
 
     RegisterContext Restore();
-    void Save(const RegisterContext& newContext, const std::vector<char>& snapshot);
+    void Save(const RegisterContext& newContext);
 };
