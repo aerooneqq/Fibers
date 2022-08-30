@@ -20,7 +20,7 @@ public:
     std::string GetName();
 
     bool IsCompleted();
-    void Execute();
+    void Execute(char* stackPtr);
 
     [[nodiscard]] TaskController* GetController() const;
 };

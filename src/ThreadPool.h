@@ -30,13 +30,13 @@ public:
 
 class ThreadPoolThread {
 private:
+    char* myStack;
     std::atomic<bool> myWasToldToShutdown{false};
     std::atomic<bool> myIsActive{false};
     std::atomic<bool> myIsProcessingTasks{false};
     std::thread* myThread{nullptr};
     TaskNodeList* myTasks;
     std::stack<TaskNode*>* myTasksToExecute{nullptr};
-
 
 public:
     ThreadPoolThread();

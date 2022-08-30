@@ -1,6 +1,6 @@
 #include <vector>
-#include "ExecutionContext.h"
 #include "typedefs.h"
+#include "util.h"
 
 enum TaskExecutionState {
     Uninitialized,
@@ -18,31 +18,31 @@ class Task;
 
 class TaskController {
 private:
-    StackManager* myStackManager{nullptr};
-    RegisterContext* myInitialRegisterContext{nullptr};
-    ExecutionContext* myExecutionContext{nullptr};
+    RegisterContext* myInitialRegisterContext{};
+    char* myInitialStackPointer{};
+
+    std::vector<char>* mySavedStack{nullptr};
+    RegisterContext mySavedContext;
+
     TaskExecutionState myState = TaskExecutionState::Uninitialized;
     ThreadPool* myThreadPool{nullptr};
     Task* myTask{nullptr};
 
-    Stack* ObtainTaskStack();
-    ExecutionContext CaptureCurrentExecutionContext();
-
 public:
-    TaskController(StackManager* stackManager, Task* task);
-
-    [[nodiscard]] RegisterContext GetInitialRegisterContext() const;
-    void SetInitialRegisterContext(const RegisterContext& context);
-
-    ExecutionContext* CreateExecutionContext(const TaskJobFunction& job, void* wrapperFunction);
-    ExecutionContext* GetExecutionContext();
+    TaskController(Task* task);
 
     void SetState(TaskExecutionState newState);
     TaskExecutionState GetState();
 
+    void SetInitialContext(RegisterContext* context, char* stackStart);
+    void SaveContext(const RegisterContext& context);
+
+    RegisterContext GetInitialRegisterContext();
+    bool ShouldContinueFromSavePoint();
+    RegisterContext PrepareRestore(char* stackPointer);
+
     void Yield();
     void Cancel();
-    void WithExclusiveAccess(Lock* lock, PureJobFunction job);
 
     ~TaskController();
 };

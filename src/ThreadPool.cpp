@@ -117,7 +117,8 @@ void ThreadPoolThread::Start() {
                         myTasksToExecute->pop();
                         auto realTask = currentTask->GetTask();
                         std::cout << "Executing task with name: " << realTask.GetName() << "\n";
-                        realTask.Execute();
+                        realTask.Execute(myStack);
+                        std::cout << "Finished executing task with name: " << realTask.GetName() << "\n";
                     }
                 }
             }
@@ -130,6 +131,7 @@ void ThreadPoolThread::Start() {
 ThreadPoolThread::ThreadPoolThread() {
     myTasks = new TaskNodeList();
     myTasksToExecute = new std::stack<TaskNode*>();
+    myStack = new char[2 << 15];
 }
 
 void ThreadPoolThread::Shutdown() {
@@ -156,24 +158,21 @@ ThreadPoolThread::~ThreadPoolThread() {
     delete myTasksToExecute;
 }
 
-TaskController::TaskController(StackManager* stackManager, Task* task) {
-    myStackManager = stackManager;
+TaskController::TaskController(Task* task) {
     myState = TaskExecutionState::Created;
     myThreadPool = ThreadPool::GetInstance();
     myTask = task;
 }
 
 void TaskController::Yield() {
+    myThreadPool->Schedule(*myTask);
     volatile int x = 0;
-    RegisterContext currentContext{};
-    FillContext(&currentContext);
+    RegisterContext context;
+    FillContext(&context);
 
     if (x == 0) {
         ++x;
-        SetState(TaskExecutionState::Yielding);
-        myExecutionContext->Save(currentContext);
-        myThreadPool->Schedule(*myTask);
-
+        SaveContext(context);
         SetContext(myInitialRegisterContext);
     }
 }

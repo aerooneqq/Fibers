@@ -12,7 +12,7 @@ bool Task::IsCompleted() {
 
 Task::Task(std::string name, const TaskJobFunction& job) : myName(std::move(name)) {
     myJob = job;
-    myController = new TaskController(StackManager::GetInstance(), this);
+    myController = new TaskController(this);
 }
 
 Task::Task(const Task& other) {
@@ -24,40 +24,36 @@ Task::Task(const Task& other) {
 
 void ExecuteForAsmReference(TaskJobFunction* function, TaskController* controller) {
     (*function)(controller);
+    auto ctx = controller->GetInitialRegisterContext();
+    SetContext(&ctx);
 }
 
-void Task::Execute() {
+void Task::Execute(char* stackPtr) {
     volatile int x = 0;
     RegisterContext savedContext;
     FillContext(&savedContext);
 
     if (x == 0) {
         ++x;
-        auto existingExecutionContext = myController->GetExecutionContext();
-        if (existingExecutionContext != nullptr) {
-            auto context = existingExecutionContext->Restore();
-            myController->SetState(TaskExecutionState::ReExecuted);
-            SetContext(&context);
+
+        if (myController->ShouldContinueFromSavePoint()) {
+            auto ctx = myController->PrepareRestore(stackPtr);
+            SetContext(&ctx);
             return;
         }
 
-        myController->SetInitialRegisterContext(savedContext);
+        myController->SetInitialContext(&savedContext, stackPtr);
         TaskJobFunction toExecute([=](TaskController* controller) {
             myJob(controller);
-            std::cout << "Finished executing task" << "\n";
-            controller->SetState(TaskExecutionState::Finished);
-            auto context = controller->GetInitialRegisterContext();
-            SetContext(&context);
         });
 
-        auto context = myController->CreateExecutionContext(toExecute, (void*) ExecuteForAsmReference);
-        auto registerContext = context->GetRegisterContext();
-
-        myController->SetState(TaskExecutionState::StartedExecution);
-
-        SetContext(&registerContext);
+        RegisterContext context{};
+        context.FirstIntArgument = (int64_t) &toExecute;
+        context.SecondIntArgument = (int64_t) myController;
+        context.InstructionPointer = (int64_t) ExecuteForAsmReference;
+        context.StackPointer = (int64_t)stackPtr;
+        SetContext(&context);
     }
-
 }
 
 TaskController* Task::GetController() const {
