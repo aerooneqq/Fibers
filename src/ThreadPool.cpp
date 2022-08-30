@@ -132,6 +132,10 @@ ThreadPoolThread::ThreadPoolThread() {
     myTasks = new TaskNodeList();
     myTasksToExecute = new std::stack<TaskNode*>();
     myStack = new char[2 << 15];
+    char* sp = (char*) (myStack + (2 << 15));
+    sp = (char*) ((int64_t) sp & -16L);
+    sp -= 128;
+    myStack = (char*) sp;
 }
 
 void ThreadPoolThread::Shutdown() {
@@ -165,13 +169,14 @@ TaskController::TaskController(Task* task) {
 }
 
 void TaskController::Yield() {
-    myThreadPool->Schedule(*myTask);
     volatile int x = 0;
     RegisterContext context;
     FillContext(&context);
 
     if (x == 0) {
         ++x;
+        SetState(TaskExecutionState::Yielding);
+        myThreadPool->Schedule(*myTask);
         SaveContext(context);
         SetContext(myInitialRegisterContext);
     }

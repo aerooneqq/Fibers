@@ -35,7 +35,7 @@ private:
     std::atomic<bool> myIsActive{false};
     std::atomic<bool> myIsProcessingTasks{false};
     std::thread* myThread{nullptr};
-    TaskNodeList* myTasks;
+    TaskNodeList* myTasks{nullptr};
     std::stack<TaskNode*>* myTasksToExecute{nullptr};
 
 public:

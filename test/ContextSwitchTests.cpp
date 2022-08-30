@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/ExecutionContext.h"
+#include "../src/util.h"
 
 TEST(ContextSwitchTests, SimpleTest) {
     volatile int x = 0;
@@ -43,23 +43,20 @@ TEST(ContextSwitchTests, TestSwitchToMethod) {
 TEST(ContextSwitchTests, TestSwithToMethodWithCustomStack) {
     volatile int x = 0;
     int y = 0;
+    char stack[2 << 15];
     RegisterContext context{};
     FillContext(&context);
 
-    auto stack = new Stack(2 << 12);
     if (x == 0) {
         ++x;
         RegisterContext functionCallContext{};
         functionCallContext.FirstIntArgument = (int64_t) &y;
         functionCallContext.SecondIntArgument = (int64_t) &context;
         functionCallContext.InstructionPointer = (int64_t) (void*) SomeFunction;
-
-
-        functionCallContext.StackPointer = stack->MaterializeStackPointer();
+        functionCallContext.StackPointer = (int64_t) (char*)stack + (2 << 15);
 
         SetContext(&functionCallContext);
     }
 
-    delete stack;
     ASSERT_EQ(y, 123);
 }

@@ -25,6 +25,7 @@ Task::Task(const Task& other) {
 void ExecuteForAsmReference(TaskJobFunction* function, TaskController* controller) {
     (*function)(controller);
     auto ctx = controller->GetInitialRegisterContext();
+    controller->SetState(TaskExecutionState::Finished);
     SetContext(&ctx);
 }
 
@@ -38,11 +39,14 @@ void Task::Execute(char* stackPtr) {
 
         if (myController->ShouldContinueFromSavePoint()) {
             auto ctx = myController->PrepareRestore(stackPtr);
+            myController->SetState(TaskExecutionState::ReExecuted);
             SetContext(&ctx);
             return;
         }
 
+        myController->SetState(TaskExecutionState::StartedExecution);
         myController->SetInitialContext(&savedContext, stackPtr);
+
         TaskJobFunction toExecute([=](TaskController* controller) {
             myJob(controller);
         });
@@ -51,7 +55,7 @@ void Task::Execute(char* stackPtr) {
         context.FirstIntArgument = (int64_t) &toExecute;
         context.SecondIntArgument = (int64_t) myController;
         context.InstructionPointer = (int64_t) ExecuteForAsmReference;
-        context.StackPointer = (int64_t)stackPtr;
+        context.StackPointer = (int64_t) stackPtr;
         SetContext(&context);
     }
 }
